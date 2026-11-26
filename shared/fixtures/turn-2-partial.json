@@ -1,0 +1,23 @@
+{
+  "cv": {
+    "meta": { "target_role": "Machine learning internship", "cv_language": "en" },
+    "personal": {
+      "full_name": "Alex Example",
+      "headline": "Artificial Intelligence student at JKU Linz",
+      "location": "Linz, Austria"
+    },
+    "education": [
+      {
+        "institution": "Johannes Kepler University Linz",
+        "degree": "BSc",
+        "field": "Artificial Intelligence",
+        "location": "Linz, Austria",
+        "start": "Oct 2024",
+        "end": "present"
+      }
+    ]
+  },
+  "reply": "Got it — BSc AI at JKU, since Oct 2024. Have you done any projects, either in courses or on your own? Tell me what you built and what tech you used.",
+  "missing_fields": ["personal.email", "skills"],
+  "ready": false
+}

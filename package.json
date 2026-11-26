@@ -1,0 +1,12 @@
+{
+  "name": "cv-builder",
+  "private": true,
+  "workspaces": ["frontend", "backend"],
+  "scripts": {
+    "dev": "concurrently -n be,fe -c blue,magenta \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

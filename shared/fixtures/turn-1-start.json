@@ -1,0 +1,6 @@
+{
+  "cv": {},
+  "reply": "Hey! I'll build your CV by asking a few questions — answer however you like, messy is fine. First: what kind of role or field is this CV for?",
+  "missing_fields": ["personal.full_name", "personal.email", "education|experience", "skills"],
+  "ready": false
+}

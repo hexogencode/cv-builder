@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "cv.schema.json",
+  "title": "CV",
+  "description": "Single source of truth for a CV. Gemini fills it via the interview; the frontend renders it. Changes need agreement from both devs (see CLAUDE.md).",
+  "type": "object",
+  "properties": {
+    "meta": {
+      "type": "object",
+      "properties": {
+        "target_role": { "type": "string", "description": "Role/field the CV is aimed at, e.g. 'ML intern'" },
+        "cv_language": { "type": "string", "enum": ["en", "de"], "default": "en" }
+      }
+    },
+    "personal": {
+      "type": "object",
+      "properties": {
+        "full_name": { "type": "string" },
+        "headline": { "type": "string", "description": "One line under the name, e.g. 'AI student @ JKU Linz'" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "location": { "type": "string" },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "label": { "type": "string" }, "url": { "type": "string" } },
+            "required": ["label", "url"]
+          }
+        },
+        "summary": { "type": "string", "description": "2-3 sentence profile. Generated last, from the rest of the CV." }
+      }
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "institution": { "type": "string" },
+          "degree": { "type": "string" },
+          "field": { "type": "string" },
+          "location": { "type": "string" },
+          "start": { "type": "string", "description": "Free text, e.g. '2024-10' or 'Oct 2024'" },
+          "end": { "type": "string", "description": "Free text or 'present'" },
+          "grade": { "type": "string" },
+          "details": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["institution"]
+      }
+    },
+    "experience": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": { "type": "string" },
+          "company": { "type": "string" },
+          "location": { "type": "string" },
+          "start": { "type": "string" },
+          "end": { "type": "string" },
+          "bullets": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["title", "company"]
+      }
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "role": { "type": "string" },
+          "link": { "type": "string" },
+          "tech": { "type": "array", "items": { "type": "string" } },
+          "bullets": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["name"]
+      }
+    },
+    "skills": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "category": { "type": "string", "description": "e.g. 'Languages', 'ML', 'Tools'" },
+          "items": { "type": "array", "items": { "type": "string" } }
+        },
+        "required": ["category", "items"]
+      }
+    },
+    "languages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "language": { "type": "string" },
+          "level": { "type": "string", "description": "CEFR (A1-C2) or 'native'" }
+        },
+        "required": ["language"]
+      }
+    }
+  }
+}

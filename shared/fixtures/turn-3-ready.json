@@ -1,0 +1,52 @@
+{
+  "cv": {
+    "meta": { "target_role": "Machine learning internship", "cv_language": "en" },
+    "personal": {
+      "full_name": "Alex Example",
+      "headline": "Artificial Intelligence student at JKU Linz",
+      "email": "alex@example.com",
+      "phone": "+43 660 0000000",
+      "location": "Linz, Austria",
+      "links": [
+        { "label": "GitHub", "url": "https://github.com/alex-example" },
+        { "label": "LinkedIn", "url": "https://linkedin.com/in/alex-example" }
+      ],
+      "summary": "AI student at JKU Linz with hands-on experience training and evaluating supervised models in Python. Built an LLM-powered CV builder at DevFest Linz. Looking for an ML internship in summer 2027."
+    },
+    "education": [
+      {
+        "institution": "Johannes Kepler University Linz",
+        "degree": "BSc",
+        "field": "Artificial Intelligence",
+        "location": "Linz, Austria",
+        "start": "Oct 2024",
+        "end": "present",
+        "details": ["Coursework: Machine Learning, Algorithms & Data Structures, Statistics"]
+      }
+    ],
+    "experience": [],
+    "projects": [
+      {
+        "name": "Gemini CV Builder",
+        "role": "Backend & prompt design",
+        "link": "https://github.com/alex-example/cv-builder",
+        "tech": ["Node.js", "React", "Gemini API"],
+        "bullets": [
+          "Built a conversational CV builder where Gemini interviews the user and fills a structured CV in real time",
+          "Designed a JSON-schema contract between LLM output and renderer, keeping cost under $0.10 per full CV"
+        ]
+      }
+    ],
+    "skills": [
+      { "category": "Programming", "items": ["Python", "JavaScript", "R"] },
+      { "category": "ML", "items": ["scikit-learn", "PyTorch", "Jupyter"] }
+    ],
+    "languages": [
+      { "language": "English", "level": "C1" },
+      { "language": "German", "level": "A1" }
+    ]
+  },
+  "reply": "Your CV has everything it needs — check the preview on the right. Want me to tighten anything, or add another project?",
+  "missing_fields": [],
+  "ready": true
+}

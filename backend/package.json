@@ -1,0 +1,16 @@
+{
+  "name": "backend",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js",
+    "try": "node --env-file-if-exists=.env scripts/try-turn.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}
