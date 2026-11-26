@@ -19,6 +19,10 @@ This file lists what changed on the frontend and what the backend still needs to
 | **Gemini hint buttons** (shown only when `ready: true`) | A normal `/api/turn` whose `user_message` is one of the fixed instructions below. |
 | Chat shows a short label for hint buttons | The label is frontend-only. `recent_messages` still contains the full instruction text (`role` + `text` only). |
 | "Start over" fix | Nothing new |
+| **Landing page** (upload CV or create from scratch) | "Create from scratch" = the usual first `/api/turn` with empty `user_message` |
+| **PDF import** ("I have a CV") | First tries `POST /api/import` (multipart, field `file`, per `shared/api.md`). While that returns **501**, the browser extracts the PDF text itself (pdf.js) and sends it as a normal `/api/turn` (see 2.5). |
+| **Design controls** (font, size, accent colour, section order, photo side) | **Nothing.** Frontend-only, stored in localStorage. Section *order* is not in the CV JSON. |
+| Move / delete entries in edit mode | Changes the order/contents of the CV arrays; arrives as the normal `cv` on the next turn. Keep the user's order when returning arrays. |
 
 ### Exact `user_message` texts the hint buttons send
 (Source: `frontend/src/components/Fx.jsx`, `hintActions()`.)
@@ -54,7 +58,8 @@ REFINEMENT (after the CV is complete)
   Do NOT change the CV in that turn (empty cv_updates).
 - If the user asks to apply your hints: apply only the hints from your previous message. If a hint needs
   facts you don't have (e.g. a number or result), ask for them instead of inventing them.
-- Stronger bullets / shorter / translate: return the complete changed arrays as usual. Still never invent facts.
+- Stronger bullets / shorter / translate: return the complete changed arrays as usual, in the SAME ORDER the
+  user has them (they may have reordered entries by hand). Still never invent facts.
 - Translate: set meta.cv_language and translate every text field of the CV (summary, headline, bullets,
   degree/field, titles, skill categories). Keep names, company names, URLs and emails unchanged.
 - Once the CV is complete, keep ready = true on refinement turns unless a required field became empty.
@@ -83,10 +88,26 @@ Refinement turns are bigger than interview turns (translate/"shorter" return who
 Watch the `[turn] in=… out=…` log line. A translate turn should stay well under ~3k output tokens.
 Keep Flash/Flash-Lite and a low thinking level.
 
-### 2.5 Next feature, if there's time: `/api/import` (already stubbed, returns 501)
-Upload an old CV PDF → Gemini prefills the CV JSON → the interview only asks for the gaps. Contract is in
-`shared/api.md` (multipart field `file`, PDF ≤ 5 MB, response shape = `/api/turn`). Coordinate with the frontend
-dev before starting, since it needs an upload button on their side.
+### 2.5 PDF import: works today via a fallback, `/api/import` makes it better
+**Today (no backend change needed):** while `/api/import` returns 501, the frontend extracts the PDF text in the
+browser and calls `/api/turn` with `cv: {}` and this `user_message` (text truncated to 3,600 chars, because the
+server caps messages at 4,000):
+
+```
+Here is the text of my existing CV, extracted from a PDF. Fill the CV JSON from it: keep my facts, fix formatting,
+write clean bullets, do not invent anything. Then tell me in 1-2 sentences what is missing or weak and ask me about
+the most important gap.
+
+<extracted PDF text>
+```
+- [ ] Test it: this is one big turn (a whole CV in, a whole CV JSON out). Check the output isn't cut off.
+- [ ] Make sure the prompt handles it well (fills every section in one go, doesn't ask the standard first question).
+
+**Better, if there's time:** implement `POST /api/import` (stub in `backend/src/server.js`). Send the PDF itself to
+Gemini as inline data (`application/pdf`) with the same response schema. That handles layouts and long CVs better than
+extracted text, and it's a nice "multimodal" point for the pitch. Response shape = `/api/turn`. The frontend
+already calls it first and only falls back on 501/404, so **no frontend change is needed** once it works.
+Needs `multer` (or similar) for `multipart/form-data`; limit 5 MB, PDF only.
 
 ---
 
@@ -97,7 +118,6 @@ dev before starting, since it needs an upload button on their side.
 - API keys only in `backend/.env`. Never commit it.
 - Small PRs on `be/<thing>` branches.
 
-## 4. Known frontend gaps (not backend work, FYI)
-- CV section headings ("Experience", "Skills", …) are hard-coded in English; when `cv_language` is `de`
-  they should become German. Frontend will fix this.
+## 4. Frontend notes (FYI)
+- CV section headings switch to German automatically when `meta.cv_language` is `"de"`.
 - In mock mode every hint button returns the same fake answer; real behaviour only shows with the backend running.

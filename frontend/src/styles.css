@@ -168,8 +168,10 @@ button.ghost:hover:not(:disabled) { color: var(--ink); border-color: var(--muted
   --ink: var(--cv-ink);
   color: var(--cv-ink); background: white; width: min(210mm, calc(100% - 32px)); min-height: 297mm;
   margin: 28px auto; padding: 18mm 16mm; border-radius: 4px; box-shadow: var(--shadow);
-  font-family: Georgia, 'Times New Roman', serif; font-size: 10.5pt; line-height: 1.4;
+  font-family: var(--cv-font, Georgia, 'Times New Roman', serif);
+  font-size: calc(10.5pt * var(--cv-scale, 1)); line-height: 1.4;
   animation: rise 0.7s cubic-bezier(.2,.8,.2,1) both;
+  transition: font-size 0.25s ease;
 }
 .cv-paper.empty {
   display: grid; place-items: center; align-content: center; gap: 14px;
@@ -185,13 +187,13 @@ button.ghost:hover:not(:disabled) { color: var(--ink); border-color: var(--muted
 .cv-paper.empty .skeleton div:nth-child(3) { width: 85%; }
 .cv-paper.empty .skeleton div:nth-child(4) { width: 70%; }
 
-.cv-header h1 { font-size: 22pt; margin: 0; letter-spacing: 0.01em; }
-.cv-headline { margin: 2px 0 6px; color: var(--cv-accent); font-size: 11.5pt; }
-.cv-contact { margin: 0; color: var(--cv-muted); font-size: 9.5pt; }
+.cv-header h1 { font-size: 2.1em; margin: 0; letter-spacing: 0.01em; }
+.cv-headline { margin: 2px 0 6px; color: var(--cv-accent); font-size: 1.1em; }
+.cv-contact { margin: 0; color: var(--cv-muted); font-size: 0.9em; }
 .cv-contact a, .cv-entry a { color: inherit; }
 .cv-section { margin-top: 14px; border-radius: 4px; }
 .cv-section h2 {
-  font-size: 10pt; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cv-accent);
+  font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cv-accent);
   border-bottom: 1px solid var(--cv-line); padding-bottom: 3px; margin: 0 0 6px;
 }
 .cv-section p { margin: 0; }
@@ -201,7 +203,7 @@ button.ghost:hover:not(:disabled) { color: var(--ink); border-color: var(--muted
 }
 .cv-entry-head { display: flex; justify-content: space-between; gap: 12px; }
 .cv-sub { color: var(--cv-muted); }
-.cv-meta { color: var(--cv-muted); font-size: 9.5pt; white-space: nowrap; }
+.cv-meta { color: var(--cv-muted); font-size: 0.9em; white-space: nowrap; }
 .cv-entry ul { margin: 3px 0 0; padding-left: 18px; }
 .cv-skills { margin: 0; display: grid; gap: 2px; }
 .cv-skills div { display: flex; gap: 8px; }
@@ -248,6 +250,71 @@ button.ghost.active { color: var(--accent); border-color: var(--accent); box-sha
 }
 .hint:hover:not(:disabled) { border-color: var(--accent); box-shadow: 0 4px 14px var(--glow-a); }
 
+
+/* ---------- Landing (minimal) ---------- */
+.landing { min-height: 100vh; max-width: 720px; margin: 0 auto; padding: 24px; display: flex; flex-direction: column; }
+.landing-top { display: flex; justify-content: space-between; align-items: center; }
+.hero { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding-bottom: 12vh; animation: fade-up 0.5s ease both; }
+.hero h2 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.1; margin: 0; letter-spacing: -0.025em; font-weight: 750; }
+.hero p { font-size: 1.1rem; color: var(--muted); margin: 0; }
+.cta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+.cta button { padding: 11px 20px; font-size: 0.98rem; }
+.cta .ghost { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); }
+button.link { align-self: flex-start; background: none; padding: 0; color: var(--accent); font-weight: 600; font-size: 0.95rem; }
+button.link:hover:not(:disabled) { transform: translateX(3px); box-shadow: none; }
+.spinner { width: 26px; height: 26px; border-radius: 50%; border: 3px solid var(--line); border-top-color: var(--accent); animation: spin 0.8s linear infinite; }
+.spinner.small { width: 14px; height: 14px; border-width: 2px; }
+.landing-error { margin: 0; padding: 10px 14px; border-radius: 10px; background: var(--error-bg); color: var(--error-ink); }
+.mock-corner { position: fixed; bottom: 14px; right: 14px; }
+
+/* Logo = home button */
+button.logo { background: none; padding: 0; color: inherit; font-weight: inherit; }
+button.logo:hover:not(:disabled) { transform: none; box-shadow: none; opacity: 0.75; }
+
+/* ---------- Design bar ---------- */
+.design-bar {
+  margin: 14px auto 0; width: min(210mm, calc(100% - 32px)); padding: 10px 12px; border-radius: 12px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 0.82rem;
+  background: var(--panel); border: 1px dashed var(--accent); backdrop-filter: blur(10px); animation: fade-up 0.3s ease both;
+}
+.design-bar label { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.design-bar select {
+  font: inherit; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--input-bg); color: var(--ink);
+}
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.seg button { background: transparent; color: var(--muted); border-radius: 0; padding: 5px 9px; font-weight: 500; font-size: 0.8rem; }
+.seg button.on { background: var(--accent-soft); color: var(--ink); }
+.seg button:hover:not(:disabled) { transform: none; box-shadow: none; color: var(--ink); }
+.swatches { display: inline-flex; align-items: center; gap: 5px; }
+.swatch { width: 20px; height: 20px; padding: 0; border-radius: 50%; border: 2px solid transparent; }
+.swatch.on { border-color: var(--ink); transform: scale(1.12); }
+.swatches input[type=color] { width: 24px; height: 24px; padding: 0; border: 0; background: none; cursor: pointer; }
+button.small { padding: 5px 9px; font-size: 0.8rem; }
+.design-tip { flex-basis: 100%; margin: 0; color: var(--muted); font-size: 0.76rem; }
+
+/* ---------- Move / delete controls on the CV (edit mode only) ---------- */
+.cv-section.is-editing { position: relative; transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease; }
+.cv-section.dragging { opacity: 0.4; }
+.cv-section.drop-target { box-shadow: 0 -3px 0 0 var(--cv-accent); }
+.sec-tools { display: inline-flex; gap: 2px; margin-right: 6px; vertical-align: 1px; font-family: system-ui, sans-serif; text-transform: none; letter-spacing: 0; }
+.handle { cursor: grab; color: #999; padding: 0 3px; user-select: none; font-size: 1.1em; line-height: 1; }
+.handle:active { cursor: grabbing; }
+button.mini {
+  font: 600 10px/1 system-ui, sans-serif; padding: 3px 5px; border-radius: 5px; background: #f1f1ee; color: #555;
+  border: 1px solid #ddd; vertical-align: middle;
+}
+button.mini:hover:not(:disabled) { background: #e4eeea; color: #1d1d1b; transform: none; box-shadow: none; }
+button.mini.danger:hover:not(:disabled) { background: #fde8e8; color: #9b1c1c; border-color: #f3b4b4; }
+.cv-entry, .skill-row { position: relative; }
+.entry-tools {
+  position: absolute; right: calc(100% + 6px); top: 0; display: flex; flex-direction: column; gap: 2px;
+  opacity: 0; transition: opacity 0.15s ease;
+}
+.cv-entry:hover > .entry-tools, .skill-row:hover > .entry-tools, .entry-tools:focus-within { opacity: 1; }
+.skill-row .entry-tools { flex-direction: row; top: -2px; }
+.lang-item button.mini { margin-left: 3px; padding: 1px 4px; font-size: 9px; }
+.cv-header.photo-left { flex-direction: row-reverse; justify-content: flex-end; }
+
 /* ---------- Confetti ---------- */
 .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 50; overflow: hidden; }
 .confetti i {
@@ -262,6 +329,7 @@ button.ghost.active { color: var(--accent); border-color: var(--accent); box-sha
 @keyframes slide-in-left { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: none; } }
 @keyframes bounce { 0%, 80%, 100% { transform: translateY(0); opacity: 0.4; } 40% { transform: translateY(-6px); opacity: 1; } }
 @keyframes shine { to { background-position: 200% center; } }
+@keyframes spin { to { transform: rotate(360deg); } }
 @keyframes shimmer { to { background-position: -200% 0; } }
 @keyframes drift { from { transform: translate(0, 0) scale(1); } to { transform: translate(-8vw, 6vw) scale(1.15); } }
 @keyframes spin-in { from { transform: rotate(-120deg) scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -290,6 +358,8 @@ button.ghost.active { color: var(--accent); border-color: var(--accent); box-sha
   :root, body { background: white !important; color-scheme: light; }
   .chat-pane, .pane-header, .confetti, .edit-banner, .preview-pane::before, .preview-pane::after { display: none !important; }
   .editable { outline: none !important; background: none !important; }
+  .design-bar, .sec-tools, .entry-tools, button.mini, .landing { display: none !important; }
+  .cv-section.drop-target { box-shadow: none !important; }
   .app { display: block; height: auto; }
   .preview-pane { overflow: visible; }
   .cv-paper { box-shadow: none; margin: 0; width: 210mm; min-height: auto; border-radius: 0; }
