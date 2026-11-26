@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { sendTurn, resetMock, MOCK } from './api.js';
+import { sendTurn, importCv, resetMock, MOCK } from './api.js';
 import Chat from './components/Chat.jsx';
 import CvPreview from './components/CvPreview.jsx';
+import Landing from './components/Landing.jsx';
+import DesignBar, { useDesign } from './components/DesignBar.jsx';
 import { useTheme, ThemeToggle, Progress, Confetti, PhotoButton, PHOTO_KEY, hintActions } from './components/Fx.jsx';
 
 const STORAGE_KEY = 'cv-builder-state-v1';
@@ -21,7 +23,10 @@ export default function App() {
   const [status, setStatus] = useState(saved?.status ?? { missing_fields: [], ready: false });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const started = useRef(false);
+  const [importing, setImporting] = useState(false);
+  const [home, setHome] = useState(false); // logo click: show the start page without losing the CV
+  const [landingError, setLandingError] = useState(null);
+  const [design, updateDesign, resetDesign] = useDesign();
   const [theme, toggleTheme] = useTheme();
   const [edit, setEdit] = useState(false);
   const [reviewed, setReviewed] = useState(false);
@@ -76,16 +81,11 @@ export default function App() {
     }
   }
 
-  // Opening question on first load
-  useEffect(() => {
-    if (started.current || messages.length) return;
-    started.current = true;
-    turn('');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Landing page → "Create from scratch": ask Gemini for the opening question.
+  const hasCv = messages.length > 0;
+  const replaceOk = () => !hasCv || confirm('This replaces your current CV. Continue?');
 
-  function restart() {
-    if (!confirm('Start over? This clears the current CV.')) return;
+  function clearAll() {
     resetMock();
     setCv({});
     setMessages([]);
@@ -95,20 +95,74 @@ export default function App() {
     setEdit(false);
     setReviewed(false);
     setPhoto(null);
+    setImporting(false);
+    setLandingError(null);
+  }
+
+  function startScratch() {
+    if (!replaceOk()) return;
+    if (hasCv) clearAll();
+    setHome(false);
+    setLandingError(null);
     turn('', { base: { cv: {}, messages: [] } });
+  }
+
+  // Landing page → "I have a CV": import the PDF, then continue in the normal chat/editor.
+  async function startImport(file) {
+    if (!replaceOk()) return;
+    if (hasCv) clearAll();
+    const mySession = session.current;
+    setLandingError(null);
+    setImporting(true);
+    try {
+      const data = await importCv(file);
+      if (mySession !== session.current) return;
+      setCv(data.cv ?? {});
+      setStatus({ missing_fields: data.missing_fields ?? [], ready: Boolean(data.ready) });
+      // Keep the chat history short: the CV JSON already holds the imported content.
+      setMessages([
+        { role: 'user', text: `I uploaded my existing CV (${file.name}) and you filled the CV from it.`, display: `📄 Uploaded ${file.name}` },
+        { role: 'assistant', text: data.reply },
+      ]);
+      setEdit(true);
+      setHome(false);
+    } catch (e) {
+      if (mySession === session.current) setLandingError(e.message);
+    } finally {
+      if (mySession === session.current) setImporting(false);
+    }
+  }
+
+  function restart() {
+    if (!confirm('Start over? This clears the current CV.')) return;
+    clearAll();
+    setHome(false);
+  }
+
+  const themeToggle = <ThemeToggle theme={theme} onToggle={toggleTheme} />;
+
+  if (home || (!messages.length && !loading)) {
+    return (
+      <>
+        <Landing onScratch={startScratch} onUpload={startImport} importing={importing}
+          error={landingError ?? (hasCv ? null : error)} themeToggle={themeToggle}
+          hasCv={hasCv} onContinue={() => setHome(false)} onHome={() => setHome(true)} />
+        {MOCK && <span className="badge mock-corner">mock mode</span>}
+      </>
+    );
   }
 
   return (
     <div className="app">
       <section className="pane chat-pane">
         <header className="pane-header">
-          <div className="brand">
+          <button className="brand logo" onClick={() => { setEdit(false); setHome(true); }} title="Home">
             <h1>CV Builder</h1>
             <span className="chip">✦ Gemini</span>
-          </div>
+          </button>
           <div className="header-actions">
             {MOCK && <span className="badge">mock</span>}
-            <ThemeToggle theme={theme} onToggle={toggleTheme} />
+            {themeToggle}
             <button className="ghost" onClick={restart}>Start over</button>
           </div>
         </header>
@@ -135,8 +189,8 @@ export default function App() {
             </button>
           </div>
         </header>
-        {edit && <div className="edit-banner">Click any text on the CV to fix it · Enter to save · Esc to cancel · empty a bullet to delete it</div>}
-        <CvPreview cv={cv} photo={photo} edit={edit} onChange={setCv} />
+        {edit && <DesignBar design={design} onChange={updateDesign} onReset={resetDesign} />}
+        <CvPreview cv={cv} photo={photo} edit={edit} onChange={setCv} design={design} onDesign={updateDesign} />
       </section>
       <Confetti fire={celebrate} />
     </div>
