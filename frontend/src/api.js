@@ -12,8 +12,9 @@ export async function sendTurn({ cv, messages, userMessage }) {
   const recent_messages = messages.slice(-MAX_MESSAGES).map(({ role, text }) => ({ role, text }));
 
   if (MOCK) {
-    await new Promise((r) => setTimeout(r, 500));
+    // Pick the step before the fake delay, so "Start over" mid-request can't shift the order.
     const step = mockSteps[Math.min(mockIndex++, mockSteps.length - 1)];
+    await new Promise((r) => setTimeout(r, 500));
     return structuredClone(step);
   }
 

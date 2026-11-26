@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { sendTurn, resetMock, MOCK } from './api.js';
 import Chat from './components/Chat.jsx';
 import CvPreview from './components/CvPreview.jsx';
+import { useTheme, ThemeToggle, Progress, Confetti, PhotoButton, PHOTO_KEY, hintActions } from './components/Fx.jsx';
 
 const STORAGE_KEY = 'cv-builder-state-v1';
 
@@ -21,6 +22,25 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const started = useRef(false);
+  const [theme, toggleTheme] = useTheme();
+  const [edit, setEdit] = useState(false);
+  const [reviewed, setReviewed] = useState(false);
+  // Photo lives only in this browser (own key): it's never sent to the backend/Gemini.
+  const [photo, setPhoto] = useState(() => {
+    try { return localStorage.getItem(PHOTO_KEY); } catch { return null; }
+  });
+  useEffect(() => {
+    try {
+      if (photo) localStorage.setItem(PHOTO_KEY, photo); else localStorage.removeItem(PHOTO_KEY);
+    } catch { /* storage full or unavailable: photo just won't persist */ }
+  }, [photo]);
+  // Confetti only when "ready" flips false → true during this session (not on reload).
+  const [celebrate, setCelebrate] = useState(0);
+  const wasReady = useRef(status.ready);
+  useEffect(() => {
+    if (status.ready && !wasReady.current) setCelebrate((n) => n + 1);
+    wasReady.current = status.ready;
+  }, [status.ready]);
 
   useEffect(() => {
     try {
@@ -30,21 +50,29 @@ export default function App() {
     }
   }, [cv, messages, status]);
 
-  async function turn(userMessage) {
+  // Bumped on "Start over": answers to requests from an older session are ignored.
+  const session = useRef(0);
+
+  // `base` lets restart() pass the fresh empty state instead of this render's (stale) cv/messages.
+  // `display`: shorter text to show in the chat (hint buttons send a longer instruction).
+  async function turn(userMessage, { base = { cv, messages }, display } = {}) {
+    const mySession = session.current;
     setLoading(true);
     setError(null);
-    const history = userMessage ? [...messages, { role: 'user', text: userMessage }] : messages;
+    const userMsg = { role: 'user', text: userMessage, ...(display && { display }) };
+    const history = userMessage ? [...base.messages, userMsg] : base.messages;
     if (userMessage) setMessages(history);
     try {
       // history already contains userMessage; send the messages *before* it as context
-      const data = await sendTurn({ cv, messages: userMessage ? messages : [], userMessage });
+      const data = await sendTurn({ cv: base.cv, messages: userMessage ? base.messages : [], userMessage });
+      if (mySession !== session.current) return;
       setCv(data.cv ?? {});
       setStatus({ missing_fields: data.missing_fields ?? [], ready: Boolean(data.ready) });
       setMessages([...history, { role: 'assistant', text: data.reply }]);
     } catch (e) {
-      setError(e.message);
+      if (mySession === session.current) setError(e.message);
     } finally {
-      setLoading(false);
+      if (mySession === session.current) setLoading(false);
     }
   }
 
@@ -62,38 +90,55 @@ export default function App() {
     setCv({});
     setMessages([]);
     setStatus({ missing_fields: [], ready: false });
-    started.current = false;
-    setTimeout(() => turn(''), 0);
+    setError(null);
+    session.current += 1;
+    setEdit(false);
+    setReviewed(false);
+    setPhoto(null);
+    turn('', { base: { cv: {}, messages: [] } });
   }
 
   return (
     <div className="app">
       <section className="pane chat-pane">
         <header className="pane-header">
-          <h1>CV Builder</h1>
+          <div className="brand">
+            <h1>CV Builder</h1>
+            <span className="chip">✦ Gemini</span>
+          </div>
           <div className="header-actions">
-            {MOCK && <span className="badge">mock mode</span>}
+            {MOCK && <span className="badge">mock</span>}
+            <ThemeToggle theme={theme} onToggle={toggleTheme} />
             <button className="ghost" onClick={restart}>Start over</button>
           </div>
         </header>
-        <Chat messages={messages} loading={loading} error={error} onSend={turn} />
+        <Chat messages={messages} loading={loading} error={error}
+          onSend={(text, label) => {
+            if (label?.startsWith('🔍')) setReviewed(true);
+            turn(text, label ? { display: label } : undefined);
+          }}
+          hints={status.ready ? hintActions(cv).filter((h) => reviewed || !h.label.startsWith('✅')) : []} />
       </section>
 
       <section className="pane preview-pane">
         <header className="pane-header">
-          <span className={status.ready ? 'status ready' : 'status'}>
-            {status.ready
-              ? 'CV ready'
-              : status.missing_fields.length
-                ? `Missing: ${status.missing_fields.join(', ')}`
-                : 'Collecting info…'}
-          </span>
-          <button onClick={() => window.print()} disabled={!Object.keys(cv).length}>
-            Save as PDF
-          </button>
+          <Progress missing={status.missing_fields} ready={status.ready} started={Object.keys(cv).length > 0} />
+          <div className="header-actions">
+            <PhotoButton photo={photo} onChange={setPhoto} />
+            <button className={edit ? 'ghost active' : 'ghost'} onClick={() => setEdit((e) => !e)}
+              disabled={!Object.keys(cv).length} title="Fix text directly on the CV">
+              {edit ? '✓ Done' : '✏️ Edit'}
+            </button>
+            <button className={status.ready ? 'pdf-btn ready' : 'pdf-btn'} onClick={() => { setEdit(false); setTimeout(() => window.print(), 50); }}
+              disabled={!Object.keys(cv).length}>
+              Save as PDF
+            </button>
+          </div>
         </header>
-        <CvPreview cv={cv} />
+        {edit && <div className="edit-banner">Click any text on the CV to fix it · Enter to save · Esc to cancel · empty a bullet to delete it</div>}
+        <CvPreview cv={cv} photo={photo} edit={edit} onChange={setCv} />
       </section>
+      <Confetti fire={celebrate} />
     </div>
   );
 }
